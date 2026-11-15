@@ -1,4 +1,4 @@
-# Reproduction Verification Report: Docker `ContainerWait` 
+# Reproduction Verification Report: Docker `ContainerWait`
 
 > **TL;DR** — The goroutine leak in Docker's `ContainerWait` reproduces deterministically (10/10 runs) in a standard-library-only environment. The upstream fix (`errC` capacity changed from 0 to 1) removes the leak: `runtime.NumGoroutine()` drops from 2 back to 1. The bug produces **no error output and no non-zero exit code** — it is invisible unless an explicit observation point is instrumented.
 
@@ -153,3 +153,5 @@ func main() {
 	fmt.Printf("[main] 当前 goroutine 数 = %d\n", runtime.NumGoroutine())
 }
 ```
+<img width="1470" height="956" alt="截屏2026-11-15 23 38 10" src="https://github.com/user-attachments/assets/207ec401-f6ab-4cf4-93f4-cf82388af2f9" /><img width="1470" height="956" alt="截屏2026-11-15 23 40 20" src="https://github.com/user-attachments/assets/df78a784-b350-4c14-8066-fa08d2a9c4f7" />
+
