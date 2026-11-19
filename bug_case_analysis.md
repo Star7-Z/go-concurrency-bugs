@@ -20,6 +20,6 @@ go-concurrency-bugs/
 │   ├── cockroachdb/
 │   ├── grpc-go/
 │   └── boltdb/
-└── go-table/
+└── bug-table/
 
 File format: All are commit patch files (containing the commit message, author, and code diff).
