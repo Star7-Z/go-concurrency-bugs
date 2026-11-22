@@ -1,0 +1,12 @@
+========== 修复后：select 双路 + stopped 信号（官方补丁 435e0b73） ==========
+[     0.5ms] [场景] watcher B 已注册但不再读取 result channel（人还没被移除）
+[     0.5ms] [distribute] 拿到锁，开始分发 "pod-updated"（修复后逻辑：select 双路）
+[     0.5ms] [distribute] → 向 watcher "A" 发送（select 同时等发送成功/已停止）
+[     1.0ms] [distribute] → 向 watcher "B" 发送（select 同时等发送成功/已停止）
+[     1.0ms] [watcher A] 收到: pod-updated
+[    51.3ms] [Stop(B)] 已 close(stopped)，再去拿锁清理
+[    51.3ms] [distribute] watcher "B" 已停止，跳过发送
+[    51.3ms] [检查] distribute 正常完成
+[    51.3ms] [检查] Stop(B) 正常返回
+[    51.3ms] [收尾] 尝试清理并退出……
+[    51.3ms] [收尾] 本场景正常结束
