@@ -76,7 +76,8 @@ git version 2.39.3 (Apple Git-146)
 
 Two logic branches are implemented inside the source code: buggy (buf=0, unbuffered channel) / fixed (buf=1, single-slot buffered channel). Each version runs independently, with at least 3 test rounds per version.
 
-> Screenshot: Output of 3 loop runs of repro_docker_wait.go
+> Screenshot: Output of 3 loop runs of repro_docker_wait.go<img width="1162" height="833" alt="截屏2026-11-22 02 31 25" src="https://github.com/user-attachments/assets/d17dbced-4432-4f88-948f-ae6451fff452" />
+
 
 Key observation: the buggy version does not trigger Go's built-in deadlock detector; the main goroutine exits normally while the child goroutine leaks silently. This is fully consistent with the conclusion in Section 5 of the paper.
 
@@ -84,10 +85,11 @@ Key observation: the buggy version does not trigger Go's built-in deadlock detec
 
 This bug is a non-blocking data race, so the ‑race flag must be enabled to run the detector. buggy: read and write without locking; fixed: protect shared variables with sync.Mutex. At least 3 test rounds per version.
 
-> Screenshot 1: gRPC‑go buggy, Round 1, ‑race run outputting a DATA RACE warning
-> Screenshot 2: gRPC‑go buggy, Round 2, ‑race run outputting a DATA RACE warning
-> Screenshot 3: gRPC‑go buggy, Round 3, ‑race run outputting a DATA RACE warning
+> Screenshot 1: gRPC‑go buggy, Round 1, ‑race run outputting a DATA RACE warning<img width="1172" height="855" alt="截屏2026-11-22 02 46 30" src="https://github.com/user-attachments/assets/e4352f0f-3472-411d-b090-9d9128498299" />
+
+> Screenshot 2: gRPC‑go buggy, Round 2, ‑race run outputting a DATA RACE warning<img width="1179" height="855" alt="截屏2026-11-22 02 47 16" src="https://github.com/user-attachments/assets/2dcf9e9e-c638-42eb-9a8e-826a4c4b597b" />
+
+> Screenshot 3: gRPC‑go buggy, Round 3, ‑race run outputting a DATA RACE warning<img width="1178" height="854" alt="截屏2026-11-22 02 48 52" src="https://github.com/user-attachments/assets/95b3d259-78de-4c97-af21-e5d6da8a2910" />
+
 
 Experimental Analysis: The buggy version of gRPC‑go triggers `DATA RACE` warnings, as multiple goroutines concurrently read and write shared counter variables without locks. This bug belongs to the non-blocking category in the paper: the program neither hangs nor exits abnormally, so it cannot be captured automatically by the Go runtime, which makes it highly concealed. The fixed version protects the shared variables with a mutex and eliminates the data race; no race is detected in any of the three rounds, which matches the characteristics of data-race concurrency defects described in the paper.
-
-> （注：部分内容由豆包 AI 生成）
