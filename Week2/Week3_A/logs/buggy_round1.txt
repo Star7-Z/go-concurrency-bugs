@@ -1,0 +1,52 @@
+========== 修复前：持锁 + 裸发送（原始 Bug） ==========
+[     0.5ms] [场景] watcher B 已注册但不再读取 result channel（人还没被移除）
+[     0.5ms] [distribute] 拿到锁，开始分发 "pod-updated"（修复前逻辑：裸发送）
+[     0.5ms] [distribute] → 向 watcher "A" 发送……
+[     0.5ms] [distribute] → 向 watcher "B" 发送……
+[     0.5ms] [watcher A] 收到: pod-updated
+[    51.0ms] [Stop(B)] 尝试拿锁清理 watcher B……
+[  1051.3ms] [检查] ✗ distribute 卡住超过 1 秒 —— 阻塞在 w.result <- ev 上，且 m.lock 未释放
+[  3052.0ms] [检查] ✗ Stop(B) 2 秒都没返回 → 死锁确认
+[  3052.0ms] [收尾] 尝试清理并退出……
+fatal error: all goroutines are asleep - deadlock!
+
+goroutine 1 [sync.Mutex.Lock]:
+sync.runtime_SemacquireMutex(0x2?, 0xe8?, 0x24?)
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/.tools/go/src/runtime/sema.go:95 +0x25
+sync.(*Mutex).lockSlow(0xc00002e0c0)
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/.tools/go/src/sync/mutex.go:173 +0x15d
+sync.(*Mutex).Lock(...)
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/.tools/go/src/sync/mutex.go:92
+main.runCase(0x0)
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/Week3/repro_k8s_mux.go:195 +0x426
+main.main()
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/Week3/repro_k8s_mux.go:213 +0xba
+
+goroutine 6 [chan receive]:
+main.runCase.func1()
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/Week3/repro_k8s_mux.go:135 +0x88
+created by main.runCase in goroutine 1
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/Week3/repro_k8s_mux.go:134 +0x16b
+
+goroutine 7 [chan send]:
+main.(*Mux).distributeBuggy(0xc00002e0c0, {{0x426984, 0xb}})
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/Week3/repro_k8s_mux.go:85 +0x19a
+main.runCase.func2()
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/Week3/repro_k8s_mux.go:152 +0x46
+created by main.runCase in goroutine 1
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/Week3/repro_k8s_mux.go:148 +0x212
+
+goroutine 18 [sync.Mutex.Lock]:
+sync.runtime_SemacquireMutex(0x2?, 0x8?, 0x2c?)
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/.tools/go/src/runtime/sema.go:95 +0x25
+sync.(*Mutex).lockSlow(0xc00002e0c0)
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/.tools/go/src/sync/mutex.go:173 +0x15d
+sync.(*Mutex).Lock(...)
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/.tools/go/src/sync/mutex.go:92
+main.(*muxWatcher).stopBuggy(0xc00002a270, 0xc00002e0c0)
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/Week3/repro_k8s_mux.go:107 +0x57
+main.runCase.func3()
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/Week3/repro_k8s_mux.go:165 +0x76
+created by main.runCase in goroutine 1
+	C:/Users/admin/WorkBuddy/2026-11-22-17-03-03/Week3/repro_k8s_mux.go:160 +0x29d
+exit status 2
